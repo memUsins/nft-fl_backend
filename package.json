@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/memUsins/nft-fl_backend.git"
+  },
+  "keywords": [
+    "backend",
+    "nodejs"
+  ],
+  "author": "Aoke Sudzuki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/memUsins/nft-fl_backend/issues"
+  },
+  "homepage": "https://github.com/memUsins/nft-fl_backend#readme",
+  "dependencies": {
+    "@fastify/cors": "^8.0.0",
+    "@fastify/multipart": "^7.1.0",
+    "axios": "^0.27.2",
+    "bcrypt": "^5.0.1",
+    "fastify": "^4.1.0",
+    "mongoose": "^6.4.0",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.1",
+    "nodemon": "^2.0.16"
+  }
+}
