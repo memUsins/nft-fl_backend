@@ -89,6 +89,16 @@ export default {
         msg: "Password is already activated",
         env: "Password"
     },
+    PASSWORD_COUNT_NOT_UPDATED: {
+        name: "PASSWORD_COUNT_NOT_UPDATED",
+        msg: "Password count was not updated",
+        env: "Password"
+    },
+    PASSWORD_COUNT_TIME: {
+        name: "PASSWORD_COUNT_TIME",
+        msg: "Not enough time has passed",
+        env: "Password"
+    }
 
 
 

@@ -15,7 +15,7 @@ const Account = {
             address: inData.address,
             referalId: inData.referalId || 0,
             passwordCount: 1,
-            date: new Date().getTime() / 1000,
+            date: Math.floor(new Date().getTime() / 1000),
         };
 
         // Pass info
@@ -26,34 +26,34 @@ const Account = {
         // Check usage address
         let usedAddress = false;
         await dbQuery.findAccountByAddress(inData.address)
-            .catch((err) => {
-                if (!err) usedAddress = true;
-            });
+            .then((res) => usedAddress = res.length !== 0 ? true : false)
+            .catch((err) => usedAddress = err == false ? false : true)
 
+        console.log(usedAddress)
         // reject
-        if (!usedAddress) return response(false, errorConfig.ADDRESS_USED);
+        if (usedAddress) return response(false, errorConfig.ADDRESS_USED);
 
         // Check usage pass
         let usedPass = false;
-
         await dbQuery.findPasswordByPassword(inData.password).then((res) => usedPass = res).catch(err => usedPass = err);
         // Create account
         let isCreated = false;
-        await dbQuery
-            .createAccount(newAccount)
-            .then((res) => {
-                isCreated = true;
-                newAccount.id = res;
-            })
-            .catch(() => {
-                return response(false, errorConfig.ACCOUNT_NOT_CREATED);
-            });
-
+        if (!usedPass) {
+            await dbQuery
+                .createAccount(newAccount)
+                .then((res) => {
+                    isCreated = true;
+                    newAccount.id = res;
+                })
+                .catch(() => {
+                    return response(false, errorConfig.ACCOUNT_NOT_CREATED);
+                });
+        } else return response(false, errorConfig.PASSWORD_USED);
         // Check created
         if (isCreated) {
             // If used pass — update owner
             // Else — create new
-            if (usedPass && usedPass.isActivate == 0) {
+            if (usedPass.isActivate == 0) {
                 // Updated data
                 newPassword = [{
                         ...newPassword,
@@ -103,6 +103,7 @@ const Account = {
                     ...newAccount,
                     password: newPassword.password
                 }, "Account has been created");
+
             }
         } else {
             // Reject
@@ -143,6 +144,7 @@ const Account = {
         return new Promise((resolve, reject) => {
             connection.query(getAccountsQuery + " WHERE address = ? ", data.address, (err, accResults, fields) => {
                 if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
+
                 let data = []
                 for (let i = 0; i < accResults.length; i++) {
                     let temp = []
@@ -160,7 +162,7 @@ const Account = {
                     if (!o.find(v => v.id == i.id)) o.push(i);
                     return o;
                 }, []);
-                resolve(response(true, res, `Account found`));
+                resolve(response(true, res[0], `Account found`));
             });
         });
     },

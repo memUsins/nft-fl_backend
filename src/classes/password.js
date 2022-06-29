@@ -49,8 +49,6 @@ const Password = {
         await dbQuery.findPasswordByPassword(inData.password)
             .then(res => passwordData = res)
             .catch((err) => passwordData = err);
-        console.log(accountData);
-        console.log(passwordData);
         if (accountData && passwordData) {
             if (passwordData.isActivate) return response(false, errorConfig.PASSWORD_ACTIVATED);
 
@@ -96,7 +94,41 @@ const Password = {
                 else resolve(response(true, results[0], `Password found`));
             });
         })
-    }
+    },
+
+    // CheckCount
+    checkCount: async (data) => {
+        if (!data) return response(false, errorConfig.DATA_EMPTY);
+
+        // Check address 
+        let accountData = false;
+        await dbQuery.findAccountByAddress(data.address)
+            .then(res => accountData = res)
+            .catch((err) => {
+                if (!err) {
+                    accountData = true;
+                }
+            });
+
+        // CheckPass
+        if (accountData) {
+            let nowDate = Math.floor(new Date().getTime() / 1000);
+            let oldDate = accountData.date
+            let timeDiff = Math.abs(oldDate - nowDate);
+            let diffDays = Math.ceil(timeDiff / (3600 * 24));
+
+            if (diffDays > 1) {
+                let qData = [{
+                    passwordCount: accountData.passwordCount + 1
+                }, accountData.id];
+
+                let isFinished = false;
+                await dbQuery.updatePasswordCount(qData).then(() => isFinished = true)
+                if (isFinished) return response(true, null, `Password count was updated`);
+                else return response(false, errorConfig.PASSWORD_COUNT_NOT_UPDATED);
+            } else return response(false, errorConfig.PASSWORD_COUNT_TIME);
+        } else return response(false, errorConfig.ACCOUNTS_NOT_FOUND);
+    },
 }
 
 export default Password;

@@ -26,9 +26,11 @@ export default {
     findAccountByAddress: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `accounts` WHERE address = ?", data, (err, res) => {
-                console.log(res);
-                if (err || res.length == 0) reject(null);
+                if (err || res.length == 0) reject(false);
                 else resolve(res[0]);
+
+                console.log(err)
+                console.log(res)
             });
         });
     },
@@ -59,8 +61,22 @@ export default {
     updatePassword: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("UPDATE `passwords` SET ? WHERE id = ?", data, (err, res) => {
-                console.log(err)
-                console.log(res)
+                if (err) reject(false);
+                resolve(true);
+            });
+        });
+    },
+
+    /**
+     * updatePasswordCount
+     *
+     * @param {Array} data password count and account id
+     *
+     * @returns {Boolean}
+     */
+    updatePasswordCount: (data) => {
+        return new Promise((resolve, reject) => {
+            connection.query("UPDATE `accounts` SET ? WHERE id = ?", data, (err, res) => {
                 if (err) reject(false);
                 resolve(true);
             });
