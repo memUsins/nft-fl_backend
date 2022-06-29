@@ -5,8 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node .",
-    "dev": "nodemon ."
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "build": "babel src -d build",
+    "prod": "node build/index.js"
   },
   "repository": {
     "type": "git",
@@ -33,6 +35,10 @@
     "mysql2": "^2.3.3"
   },
   "devDependencies": {
+    "@babel/cli": "^7.18.6",
+    "@babel/core": "^7.18.6",
+    "@babel/preset-env": "^7.18.6",
+    "babel-preset-es2015": "^6.24.1",
     "dotenv": "^16.0.1",
     "nodemon": "^2.0.16"
   }

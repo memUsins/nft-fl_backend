@@ -1,5 +1,5 @@
-import config from "./src/utils/config.js";
-import server from "./src/server.js";
+import config from "./utils/config.js";
+import server from "./server.js";
 
 server.init(config.PORT, config.MONGO_URL)
     .then(res => console.log(res))
