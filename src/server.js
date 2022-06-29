@@ -28,9 +28,7 @@ export default {
                 });
 
                 // Start
-                fastify.listen({
-                    port: port
-                })
+                fastify.listen(port, url)
 
                 resolve({
                     status: true,
