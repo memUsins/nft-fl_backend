@@ -28,7 +28,10 @@ export default {
                 });
 
                 // Start
-                fastify.listen(port, url)
+                fastify.listen({
+                    port,
+                    host: url
+                })
 
                 resolve({
                     status: true,
