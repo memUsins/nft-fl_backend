@@ -115,18 +115,21 @@ const Account = {
     getAll: () => {
         return new Promise((resolve, reject) => {
             connection.query(getAccountsQuery, (err, accResults, fields) => {
-                dbQuery.getAccounts(accResults);
                 if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNTS_NOT_FOUND));
 
                 let data = []
                 for (let i = 0; i < accResults.length; i++) {
-                    let temp = []
+                    let tempPassword = [];
+                    let tempRefers = [];
                     accResults.forEach(el => {
-                        if (el.activatorId === accResults[i].id) temp.push(el.password)
+                        if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
+                        if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
                     data.push({
                         ...accResults[i],
-                        password: temp
+                        password: tempPassword,
+                        referalCount: tempRefers.length || 0,
+                        referals: tempRefers || []
                     })
                 }
                 const res = data.reduce((o, i) => {
@@ -134,7 +137,6 @@ const Account = {
                     return o;
                 }, []);
                 resolve(response(true, res, `${res.length} accounts found`));
-
             });
         });
     },
@@ -147,15 +149,17 @@ const Account = {
 
                 let data = []
                 for (let i = 0; i < accResults.length; i++) {
-                    let temp = []
-
+                    let tempPassword = [];
+                    let tempRefers = [];
                     accResults.forEach(el => {
-                        if (el.activatorId === accResults[i].id) temp.push(el.password)
+                        if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
+                        if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
-
                     data.push({
                         ...accResults[i],
-                        password: temp
+                        password: tempPassword,
+                        referalCount: tempRefers.length || 0,
+                        referals: tempRefers || []
                     })
                 }
                 const res = data.reduce((o, i) => {

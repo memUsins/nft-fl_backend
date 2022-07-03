@@ -116,22 +116,5 @@ export default {
         });
     },
 
-    getAccounts: (data) => {
-        let arr = [];
-
-        let newData = data.filter((item, index) => {
-            let itemData = [];
-
-            for (let i = 0; i < data.length; i++) {
-                // console.log(data[i].id);
-                if (data[i].id === item.id) {
-                    // console.log("yes", i, data[i].id, item.id);
-                    itemData.push(data[i]);
-                };
-                // if (data[i].id === item.id) 
-            }
-            arr.push(itemData);
-        })
-        // console.log(arr);
-    }
+    getAccounts: (data) => {}
 };
