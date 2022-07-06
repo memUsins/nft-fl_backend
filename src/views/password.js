@@ -40,7 +40,6 @@ export default async (fastify, options) => {
     fastify.post('/checkCount', async (req, reply) => {
         await Password.checkCount(req.body)
             .then(res => {
-                console.log("response", res);
                 if (res.status) reply.code(200).send(res);
                 else reply.code(500).send(res);
             })

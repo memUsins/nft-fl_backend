@@ -8,7 +8,8 @@ let getAccountsQuery = "SELECT accounts.id, accounts.address, accounts.referalId
 
 const Account = {
     create: async (inData) => {
-        if (!inData || !inData.address || !inData.password) return response(false, errorConfig.NOT_ALL_DATA);
+        if (!inData) return response(false, errorConfig.NOT_ALL_DATA);
+        if (!inData.address || !inData.password) return response(false, errorConfig.NOT_ALL_DATA);
 
         // Account info
         let newAccount = {
@@ -18,97 +19,63 @@ const Account = {
             date: Math.floor(new Date().getTime() / 1000),
         };
 
-        // Pass info
-        let newPassword = {
-            isActivate: 1,
-        };
-
         // Check usage address
-        let usedAddress = false;
-        await dbQuery.findAccountByAddress(inData.address)
-            .then((res) => usedAddress = res.length !== 0 ? true : false)
-            .catch((err) => usedAddress = err == false ? false : true)
+        let usedAddress = await dbQuery
+            .findAccountByAddress(inData.address)
+            .then(() => true)
+            .catch(() => false)
 
-        console.log(usedAddress)
-        // reject
         if (usedAddress) return response(false, errorConfig.ADDRESS_USED);
 
         // Check usage pass
-        let usedPass = false;
-        await dbQuery.findPasswordByPassword(inData.password).then((res) => usedPass = res).catch(err => usedPass = err);
+        let usedPass = await dbQuery
+            .findPasswordByPassword(inData.password)
+            .then((res) => res)
+            .catch(() => false);
+
         // Create account
-        let isCreated = false;
-        if (!usedPass) {
+        if (!usedPass) return response(false, errorConfig.PASSWORD_NOT_FOUND);
+        if (usedPass.isActivate === 0) {
             await dbQuery
                 .createAccount(newAccount)
-                .then((res) => {
-                    isCreated = true;
-                    newAccount.id = res;
-                })
-                .catch(() => {
-                    return response(false, errorConfig.ACCOUNT_NOT_CREATED);
-                });
+                .then(res => newAccount.id = res)
+                .catch(() => response(false, errorConfig.ACCOUNT_NOT_CREATED));
         } else return response(false, errorConfig.PASSWORD_USED);
+
         // Check created
-        if (isCreated) {
-            // If used pass — update owner
-            // Else — create new
-            if (usedPass.isActivate == 0) {
-                // Updated data
-                newPassword = [{
-                        ...newPassword,
-                        activatorId: newAccount.id,
-                    },
-                    usedPass.id,
-                ];
-
-                // Update
-                await dbQuery.updatePassword(newPassword).then((res) => {
-                    if (!res) return response(false, errorConfig.PASSWORD_NOT_UPDATED);
-                    newPassword.id = usedPass.id;
-                });
-            } else if (usedPass && usedPass.isActivate == 1) {
-                return response(false, errorConfig.PASSWORD_USED)
-            } else {
-                // new data
-                newPassword = {
-                    ...newPassword,
-                    password: inData.password,
-                    ownerId: newAccount.id,
+        if (typeof newAccount.id !== "undefined") {
+            // Updated data
+            let password = [{
+                    isActivate: 1,
                     activatorId: newAccount.id,
-                };
+                },
+                usedPass.id,
+            ];
 
-                // Insert
-                await dbQuery.insertNewPassword(newPassword).then((res) => {
-                    if (!res) return response(false, errorConfig.PASSWORD_NOT_CREATED);
-                    newPassword.id = res;
-                });
-            }
+            // Update
+            await dbQuery
+                .updatePassword(password)
+                .then(() => true)
+                .catch(() => response(false, errorConfig.PASSWORD_NOT_UPDATED))
 
             // Check finished process and insert pass data
-            let isFinished = false;
-            dbQuery
+            let isFinished = await dbQuery
                 .insertPasswordOwner({
-                    passwordId: newPassword.id,
+                    passwordId: usedPass.id,
                     accountId: newAccount.id,
                 })
-                .then((isFinished = true))
-                .catch(() => {
-                    return response(false, errorConfig.PASSWORD_OWNER_NOT_INSERTED);
-                });
+                .then(() => true)
+                .catch(() => response(false, errorConfig.PASSWORD_OWNER_NOT_INSERTED));
 
             // Resolve
             if (isFinished) {
                 return response(true, {
                     ...newAccount,
-                    password: newPassword.password
+                    password: password.password
                 }, "Account has been created");
 
             }
-        } else {
-            // Reject
-            return response(false, errorConfig.ACCOUNT_NOT_CREATED);
-        }
+        } else return response(false, errorConfig.ACCOUNT_NOT_CREATED);
     },
 
     // GetAll
@@ -118,13 +85,16 @@ const Account = {
                 if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNTS_NOT_FOUND));
 
                 let data = []
+
                 for (let i = 0; i < accResults.length; i++) {
                     let tempPassword = [];
                     let tempRefers = [];
+
                     accResults.forEach(el => {
                         if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
                         if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
+
                     data.push({
                         ...accResults[i],
                         password: tempPassword,
@@ -132,29 +102,34 @@ const Account = {
                         referals: tempRefers || []
                     })
                 }
+
                 const res = data.reduce((o, i) => {
                     if (!o.find(v => v.id == i.id)) o.push(i);
                     return o;
                 }, []);
+
                 resolve(response(true, res, `${res.length} accounts found`));
             });
         });
     },
 
     // GetByAddress
-    getOneByAddress: (data) => {
+    getOneByAddress: (inData) => {
         return new Promise((resolve, reject) => {
-            connection.query(getAccountsQuery + " WHERE address = ? ", data.address, (err, accResults, fields) => {
+            connection.query(getAccountsQuery, (err, accResults, fields) => {
                 if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
 
                 let data = []
+
                 for (let i = 0; i < accResults.length; i++) {
                     let tempPassword = [];
                     let tempRefers = [];
+
                     accResults.forEach(el => {
                         if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
                         if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
+
                     data.push({
                         ...accResults[i],
                         password: tempPassword,
@@ -162,11 +137,15 @@ const Account = {
                         referals: tempRefers || []
                     })
                 }
-                const res = data.reduce((o, i) => {
+
+                let res = data.reduce((o, i) => {
                     if (!o.find(v => v.id == i.id)) o.push(i);
                     return o;
                 }, []);
-                resolve(response(true, res[0], `Account found`));
+
+                res = res.find(el => el.address === inData.address)
+
+                resolve(response(true, res, `Account found`));
             });
         });
     },
