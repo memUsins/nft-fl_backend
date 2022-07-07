@@ -109,24 +109,24 @@ const Password = {
             let oldDate = accountData.date
             let timeDiff = Math.abs(oldDate - nowDate);
             let diffDays = Math.ceil(timeDiff / (3600 * 24));
+            let passwordCount = accountData.passwordCount;
 
-            if (diffDays > 1 && data.refCount >= 5) {
-                let passwordCount = accountData.passwordCount;
-                passwordCount += Math.round(data.refCount / 5);
-                passwordCount += Math.round(data.tableCount / 2);
+            if (diffDays > 1 && data.refCount >= 5) passwordCount += 1
 
-                let qData = [{
-                    date: nowDate,
-                    passwordCount: passwordCount
-                }, accountData.id];
+            passwordCount += Math.round(data.refCount / 5);
+            passwordCount += Math.round(data.tableCount / 2);
 
-                let isFinished = await dbQuery.updatePasswordCount(qData).then(() => true)
-                if (isFinished) {
-                    let passes = await dbQuery.generateHash(passwordCount - accountData.passwordCount, 8);
-                    let pushPasses = await dbQuery.createPassword(passes, accountData.id)
-                    if (pushPasses) return response(true, null, `Password count was updated`);
-                } else return response(false, errorConfig.PASSWORD_COUNT_NOT_UPDATED);
-            } else return response(false, errorConfig.PASSWORD_COUNT_TIME);
+            let qData = [{
+                date: nowDate,
+                passwordCount: passwordCount
+            }, accountData.id];
+
+            let isFinished = await dbQuery.updatePasswordCount(qData).then(() => true)
+            if (isFinished) {
+                let passes = await dbQuery.generateHash(passwordCount - accountData.passwordCount, 8);
+                let pushPasses = await dbQuery.createPassword(passes, accountData.id)
+                if (pushPasses) return response(true, null, `Password count was updated`);
+            } else return response(false, errorConfig.PASSWORD_COUNT_NOT_UPDATED);
         } else return response(false, errorConfig.ACCOUNT_NOT_FOUND);
     },
 }
