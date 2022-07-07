@@ -10,14 +10,24 @@ export default {
     findPasswordByPassword: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `passwords` WHERE password = ?", data, (err, res) => {
-                console.log(err);
-                console.log(res);
                 if (err || typeof res === "undefined") reject(false);
                 else resolve(res[0]);
             });
         });
     },
-
+    /**
+     * findPasswords
+     *
+     * @returns {object}
+     */
+    findPasswords: () => {
+        return new Promise((resolve, reject) => {
+            connection.query("SELECT * FROM `passwords`", (err, res) => {
+                if (err || typeof res === "undefined") reject(false);
+                else resolve(res);
+            });
+        });
+    },
     /**
      * findAccountByAddress
      *
@@ -33,6 +43,19 @@ export default {
 
                 console.log(err)
                 console.log(res)
+            });
+        });
+    },
+    /**
+     * findAccounts
+     *
+     * @returns {object}
+     */
+    findAccounts: () => {
+        return new Promise((resolve, reject) => {
+            connection.query("SELECT * FROM `accounts`", (err, res) => {
+                if (err || res.length == 0) reject(false);
+                else resolve(res);
             });
         });
     },

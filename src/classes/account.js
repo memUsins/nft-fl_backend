@@ -67,12 +67,8 @@ const Account = {
                 .then(() => true)
                 .catch(() => response(false, errorConfig.PASSWORD_OWNER_NOT_INSERTED));
 
-            // Create new password
-            let passes = await dbQuery.generateHash(1, 8);
-            let pushPasses = await dbQuery.createPassword(passes, newAccount.id)
-
             // Resolve
-            if (isFinished && pushPasses) {
+            if (isFinished) {
                 return response(true, {
                     ...newAccount,
                     password: password.password
@@ -83,83 +79,74 @@ const Account = {
     },
 
     // GetAll
-    getAll: () => {
-        return new Promise((resolve, reject) => {
-            connection.query(getAccountsQuery, (err, accResults, fields) => {
-                if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNTS_NOT_FOUND));
+    getAll: async () => {
+        let accountData = await dbQuery.findAccounts();
+        let passwordData = await dbQuery.findPasswords();
 
-                let responseData = []
+        if (accountData && passwordData) {
+            let responseData = []
 
-                for (let i = 0; i < accResults.length; i++) {
-                    let tempPassword = [];
-                    let tempRefers = [];
+            for (let i = 0; i < accountData.length; i++) {
+                let tempPassword = [];
+                let tempRefers = [];
 
-                    accResults.forEach(el => {
-                        if (el.isActivate === 0) {
-                            if (el.ownerId === accResults[i].id) tempPassword.push(el.password)
-                        }
+                passwordData.forEach(el => {
+                    if (el.isActivate === 0) {
+                        if (el.ownerId === accountData[i].id) tempPassword.push(el.password)
+                    }
+                })
 
-                        if (el.referalId === accResults[i].id) tempRefers.push(el.id)
-                    })
+                accountData.forEach(el => {
+                    if (el.referalId === accountData[i].id) tempRefers.push(el.id)
+                })
 
-                    responseData.push({
-                        ...accResults[i],
-                        password: tempPassword,
-                        referalCount: tempRefers.length || 0,
-                        referals: tempRefers || []
-                    })
-                }
+                responseData.push({
+                    ...accountData[i],
+                    password: tempPassword,
+                    referalCount: tempRefers.length || 0,
+                    referals: tempRefers || []
+                })
+            }
 
-                const res = responseData.reduce((o, i) => {
-                    if (!o.find(v => v.id == i.id)) o.push(i);
-                    return o;
-                }, []);
-
-                resolve(response(true, res, `${res.length} accounts found`));
-            });
-        });
+            if (responseData) return response(true, responseData, `${responseData.length} accounts found`);
+            else response(false, errorConfig.ACCOUNT_NOT_FOUND);
+        } else return reject(response(false, errorConfig.ACCOUNT_NOT_FOUND))
     },
 
     // GetByAddress
-    getOneByAddress: function (data) {
-        return new Promise((resolve, reject) => {
-            connection.query(getAccountsQuery, (err, accResults, fields) => {
-                if (err || typeof accResults === "undefined" || accResults.length === 0) reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
+    getOneByAddress: async (data) => {
+        let accountData = await dbQuery.findAccounts();
+        let passwordData = await dbQuery.findPasswords();
 
-                let responseData = []
+        if (accountData && passwordData) {
+            let responseData = []
 
-                for (let i = 0; i < accResults.length; i++) {
-                    let tempPassword = [];
-                    let tempRefers = [];
+            for (let i = 0; i < accountData.length; i++) {
+                let tempPassword = [];
+                let tempRefers = [];
 
-                    accResults.forEach(el => {
-                        if (el.isActivate === 0) {
-                            if (el.ownerId === accResults[i].id) tempPassword.push(el.password)
-                        }
+                passwordData.forEach(el => {
+                    if (el.isActivate === 0) {
+                        if (el.ownerId === accountData[i].id) tempPassword.push(el.password)
+                    }
+                })
 
-                        if (el.referalId === accResults[i].id) tempRefers.push(el.id)
-                    })
+                accountData.forEach(el => {
+                    if (el.referalId === accountData[i].id) tempRefers.push(el.id)
+                })
 
-                    responseData.push({
-                        ...accResults[i],
-                        password: tempPassword,
-                        referalCount: tempRefers.length || 0,
-                        referals: tempRefers || []
-                    })
-                }
+                responseData.push({
+                    ...accountData[i],
+                    password: tempPassword,
+                    referalCount: tempRefers.length || 0,
+                    referals: tempRefers || []
+                })
+            }
+            let res = responseData.find(el => el.address === data.address)
 
-                let res = responseData.reduce((o, i) => {
-                    if (!o.find(v => v.id == i.id)) o.push(i);
-                    return o;
-                }, []);
-
-
-                res = res.find(el => el.address === data.address)
-
-                if (res) resolve(response(true, res, `Account found`));
-                else reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
-            });
-        });
+            if (res) return response(true, res, `Account found`);
+            else return response(false, errorConfig.ACCOUNT_NOT_FOUND);
+        } else return response(false, errorConfig.ACCOUNT_NOT_FOUND)
     },
 };
 
