@@ -10,8 +10,10 @@ export default {
     findPasswordByPassword: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `passwords` WHERE password = ?", data, (err, res) => {
-                if (err || res.length == 0) reject(false);
-                resolve(res[0]);
+                console.log(err);
+                console.log(res);
+                if (err || typeof res === "undefined") reject(false);
+                else resolve(res[0]);
             });
         });
     },

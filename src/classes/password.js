@@ -19,9 +19,12 @@ const Password = {
         // Check password
         let passwordData = await dbQuery.findPasswordByPassword(inData.password)
             .then(res => res)
-            .catch((err) => false);
+            .catch(() => false);
 
-        if (passwordData) return response(false, errorConfig.PASSWORD_USED);
+        console.log("passwordData", passwordData);
+        console.log(typeof passwordData !== "undefined" || passwordData === false);
+
+        if (typeof passwordData !== "undefined" || passwordData === false) return response(false, errorConfig.PASSWORD_USED);
 
         await connection.query("INSERT INTO `passwords` SET ?", newPassword, (err, results, fields) => {
             if (err) return response(false, errorConfig.PASSWORD_NOT_CREATED);
@@ -90,8 +93,10 @@ const Password = {
 
     // CheckCount
     checkCount: async (data) => {
+        console.log(data)
+        console.log(typeof data.address, typeof data.tableCount, typeof data.refCount);
         if (!data) return response(false, errorConfig.DATA_EMPTY);
-        if (!data.address || !data.tableCount || !data.refCount) return response(false, errorConfig.NOT_ALL_DATA);
+        if (typeof data.address === "undefined" || typeof data.tableCount === "undefined" || typeof data.refCount === "undefined") return response(false, errorConfig.NOT_ALL_DATA);
 
         // Check address 
         let accountData = await dbQuery.findAccountByAddress(data.address)
@@ -111,6 +116,7 @@ const Password = {
                 passwordCount += Math.round(data.tableCount / 2);
 
                 let qData = [{
+                    date: nowDate,
                     passwordCount: passwordCount
                 }, accountData.id];
 

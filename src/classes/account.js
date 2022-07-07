@@ -3,7 +3,7 @@ import connection from "./../utils/mysqlConnect.js";
 import dbQuery from "../utils/dbQuery.js";
 import errorConfig from "./../utils/errorConfig.js";
 
-let getAccountsQuery = "SELECT accounts.id, accounts.address, accounts.referalId, accounts.passwordCount, accounts.date, passwords.password, passwords.activatorId FROM `accounts` INNER JOIN `passwords` ON accounts.id = passwords.activatorId"
+let getAccountsQuery = "SELECT accounts.id, accounts.address, accounts.referalId, accounts.passwordCount, accounts.date, passwords.password, passwords.ownerId, passwords.isActivate FROM `accounts` INNER JOIN `passwords` ON accounts.id = passwords.ownerId;"
 // let getAccountsQuery = "SELECT * FROM `accounts` INNER JOIN `passwords` ON accounts.id = passwords.activatorId"
 
 const Account = {
@@ -67,8 +67,12 @@ const Account = {
                 .then(() => true)
                 .catch(() => response(false, errorConfig.PASSWORD_OWNER_NOT_INSERTED));
 
+            // Create new password
+            let passes = await dbQuery.generateHash(1, 8);
+            let pushPasses = await dbQuery.createPassword(passes, newAccount.id)
+
             // Resolve
-            if (isFinished) {
+            if (isFinished && pushPasses) {
                 return response(true, {
                     ...newAccount,
                     password: password.password
@@ -84,18 +88,21 @@ const Account = {
             connection.query(getAccountsQuery, (err, accResults, fields) => {
                 if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNTS_NOT_FOUND));
 
-                let data = []
+                let responseData = []
 
                 for (let i = 0; i < accResults.length; i++) {
                     let tempPassword = [];
                     let tempRefers = [];
 
                     accResults.forEach(el => {
-                        if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
+                        if (el.isActivate === 0) {
+                            if (el.ownerId === accResults[i].id) tempPassword.push(el.password)
+                        }
+
                         if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
 
-                    data.push({
+                    responseData.push({
                         ...accResults[i],
                         password: tempPassword,
                         referalCount: tempRefers.length || 0,
@@ -103,7 +110,7 @@ const Account = {
                     })
                 }
 
-                const res = data.reduce((o, i) => {
+                const res = responseData.reduce((o, i) => {
                     if (!o.find(v => v.id == i.id)) o.push(i);
                     return o;
                 }, []);
@@ -114,23 +121,26 @@ const Account = {
     },
 
     // GetByAddress
-    getOneByAddress: (inData) => {
+    getOneByAddress: function (data) {
         return new Promise((resolve, reject) => {
             connection.query(getAccountsQuery, (err, accResults, fields) => {
-                if (err || accResults.length == 0) reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
+                if (err || typeof accResults === "undefined" || accResults.length === 0) reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
 
-                let data = []
+                let responseData = []
 
                 for (let i = 0; i < accResults.length; i++) {
                     let tempPassword = [];
                     let tempRefers = [];
 
                     accResults.forEach(el => {
-                        if (el.activatorId === accResults[i].id) tempPassword.push(el.password)
+                        if (el.isActivate === 0) {
+                            if (el.ownerId === accResults[i].id) tempPassword.push(el.password)
+                        }
+
                         if (el.referalId === accResults[i].id) tempRefers.push(el.id)
                     })
 
-                    data.push({
+                    responseData.push({
                         ...accResults[i],
                         password: tempPassword,
                         referalCount: tempRefers.length || 0,
@@ -138,14 +148,16 @@ const Account = {
                     })
                 }
 
-                let res = data.reduce((o, i) => {
+                let res = responseData.reduce((o, i) => {
                     if (!o.find(v => v.id == i.id)) o.push(i);
                     return o;
                 }, []);
 
-                res = res.find(el => el.address === inData.address)
 
-                resolve(response(true, res, `Account found`));
+                res = res.find(el => el.address === data.address)
+
+                if (res) resolve(response(true, res, `Account found`));
+                else reject(response(false, errorConfig.ACCOUNT_NOT_FOUND));
             });
         });
     },
