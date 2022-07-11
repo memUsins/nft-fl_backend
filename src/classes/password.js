@@ -111,10 +111,10 @@ const Password = {
             let diffDays = Math.ceil(timeDiff / (3600 * 24));
             let passwordCount = accountData.passwordCount;
 
-            if (diffDays > 1 && data.refCount >= 5) passwordCount += 1
+            if (diffDays > 1) passwordCount += 1
 
-            passwordCount += Math.round(data.refCount / 5);
-            passwordCount += Math.round(data.tableCount / 2);
+            passwordCount += data.refCount;
+            passwordCount += data.tableCount;
 
             let qData = [{
                 date: nowDate,
