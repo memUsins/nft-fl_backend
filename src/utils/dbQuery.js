@@ -40,9 +40,6 @@ export default {
             connection.query("SELECT * FROM `accounts` WHERE address = ?", data, (err, res) => {
                 if (err || res.length == 0) reject(false);
                 else resolve(res[0]);
-
-                console.log(err)
-                console.log(res)
             });
         });
     },
@@ -119,7 +116,6 @@ export default {
         return new Promise((resolve, reject) => {
             // Insert new pass
             connection.query("INSERT INTO `passwords` SET ?", data, (err, res) => {
-                console.log(err);
                 if (err) reject(false);
                 resolve(res.insertId);
             });

@@ -93,11 +93,8 @@ const Password = {
 
     // CheckCount
     checkCount: async (data) => {
-        console.log(data)
-        console.log(typeof data.address, typeof data.tableCount, typeof data.refCount);
         if (!data) return response(false, errorConfig.DATA_EMPTY);
         if (typeof data.address === "undefined" || typeof data.tableCount === "undefined" || typeof data.refCount === "undefined") return response(false, errorConfig.NOT_ALL_DATA);
-
         // Check address 
         let accountData = await dbQuery.findAccountByAddress(data.address)
             .then(res => res)
@@ -124,7 +121,8 @@ const Password = {
             let isFinished = await dbQuery.updatePasswordCount(qData).then(() => true)
             if (isFinished) {
                 let passes = await dbQuery.generateHash(passwordCount - accountData.passwordCount, 8);
-                let pushPasses = await dbQuery.createPassword(passes, accountData.id)
+                let pushPasses = true;
+                if (passes.length) pushPasses = await dbQuery.createPassword(passes, accountData.id)
                 if (pushPasses) return response(true, null, `Password count was updated`);
             } else return response(false, errorConfig.PASSWORD_COUNT_NOT_UPDATED);
         } else return response(false, errorConfig.ACCOUNT_NOT_FOUND);
