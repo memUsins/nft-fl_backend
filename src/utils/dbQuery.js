@@ -52,14 +52,8 @@ export default {
         return new Promise((resolve, reject) => {
             console.log(1.1)
             connection.query("SELECT * FROM `accounts`", (err, res) => {
-                console.log(1.2)
-                console.log("err", err)
-                console.log("res", res)
-                console.log(!err);
-                console.log(!res.length);
                 if (err || !res.length) reject(false);
                 else resolve(res);
-                console.log(1.3)
             });
         });
     },
