@@ -80,8 +80,8 @@ const Account = {
 
     // GetAll
     getAll: async () => {
-        let accountData = await dbQuery.findAccounts();
-        let passwordData = await dbQuery.findPasswords();
+        let accountData = await dbQuery.findAccounts().then(res => res).catch(err => console.log("error", err));
+        let passwordData = await dbQuery.findPasswords().then(res => res).catch(err => console.log("error", err));
 
         if (accountData && passwordData) {
             let responseData = []
@@ -115,8 +115,8 @@ const Account = {
 
     // GetByAddress
     getOneByAddress: async (data) => {
-        let accountData = await dbQuery.findAccounts();
-        let passwordData = await dbQuery.findPasswords();
+        let accountData = await dbQuery.findAccounts().then(res => res).catch(err => console.log("error", err));
+        let passwordData = await dbQuery.findPasswords().then(res => res).catch(err => console.log("error", err));
 
         if (accountData && passwordData) {
             let responseData = []

@@ -10,7 +10,7 @@ export default {
     findPasswordByPassword: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `passwords` WHERE password = ?", data, (err, res) => {
-                if (err || typeof res === "undefined") reject(false);
+                if (err || typeof res === "undefined" || !res) reject(false);
                 else resolve(res[0]);
             });
         });
@@ -23,7 +23,7 @@ export default {
     findPasswords: () => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `passwords`", (err, res) => {
-                if (err || typeof res === "undefined") reject(false);
+                if (err || res.length === 0 || typeof res === "undefined" || !res) reject(false);
                 else resolve(res);
             });
         });
@@ -38,7 +38,7 @@ export default {
     findAccountByAddress: (data) => {
         return new Promise((resolve, reject) => {
             connection.query("SELECT * FROM `accounts` WHERE address = ?", data, (err, res) => {
-                if (err || res.length == 0) reject(false);
+                if (err || res.length === 0 || !res) reject(false);
                 else resolve(res[0]);
             });
         });
@@ -50,9 +50,16 @@ export default {
      */
     findAccounts: () => {
         return new Promise((resolve, reject) => {
+            console.log(1.1)
             connection.query("SELECT * FROM `accounts`", (err, res) => {
-                if (err || res.length == 0) reject(false);
+                console.log(1.2)
+                console.log("err", err)
+                console.log("res", res)
+                console.log(!err);
+                console.log(!res.length);
+                if (err || !res.length) reject(false);
                 else resolve(res);
+                console.log(1.3)
             });
         });
     },
