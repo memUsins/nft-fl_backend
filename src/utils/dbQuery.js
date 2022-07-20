@@ -50,7 +50,6 @@ export default {
      */
     findAccounts: () => {
         return new Promise((resolve, reject) => {
-            console.log(1.1)
             connection.query("SELECT * FROM `accounts`", (err, res) => {
                 if (err || !res.length) reject(false);
                 else resolve(res);
