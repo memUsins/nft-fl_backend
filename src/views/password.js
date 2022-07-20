@@ -19,6 +19,15 @@ export default async (fastify, options) => {
             .catch(err => reply.code(500).send(err));
     });
 
+    fastify.get('/check/:password', async (req, reply) => {
+        await Password.checkPassword(req.params)
+            .then(res => {
+                if (res.status) reply.code(200).send(res);
+                else reply.code(500).send(res);
+            })
+            .catch(err => reply.code(500).send(err));
+    });
+
     fastify.post('/create', async (req, reply) => {
         await Password.create(req.body)
             .then(res => {

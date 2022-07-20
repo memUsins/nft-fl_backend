@@ -127,6 +127,24 @@ const Password = {
             } else return response(false, errorConfig.PASSWORD_COUNT_NOT_UPDATED);
         } else return response(false, errorConfig.ACCOUNT_NOT_FOUND);
     },
+
+    // CheckCount
+    checkPassword: async (data) => {
+        if (!data) return response(false, errorConfig.DATA_EMPTY);
+
+        // Check usage pass
+        let usedPass = await dbQuery
+            .findPasswordByPassword(data.password)
+            .then((res) => res)
+            .catch(() => false);
+
+        if (!usedPass) return response(false, errorConfig.PASSWORD_NOT_FOUND);
+        if (usedPass.isActivate !== 0) return response(false, errorConfig.PASSWORD_USED);
+
+        return response(true, {
+            password: data.password
+        }, "Password is successfully");
+    },
 }
 
 export default Password;
